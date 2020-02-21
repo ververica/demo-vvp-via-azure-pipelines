@@ -1,0 +1,38 @@
+kind: Deployment
+apiVersion: v1
+metadata:
+  name: ${artifactId}-deployment
+  namespace: ${vvpNamespace}
+spec:
+  state: RUNNING
+  upgradeStrategy:
+    kind: STATEFUL
+  restoreStrategy:
+    kind: LATEST_STATE
+    allowNonRestoredState: false
+  deploymentTargetId: 6232cc84-7aa3-4524-b3a8-36cab7203c47
+  template:
+    metadata:
+      annotations: {}
+    spec:
+      artifact:
+        kind: JAR
+        jarUri: >-
+          wasbs://${blobContainer}@${storageAccount}.blob.core.windows.net/artifacts/namespaces/${vvpNamespace}/${jarFileName}?commit=${commitHash}
+        flinkVersion: 1.9
+        flinkImageRegistry: registry.platform.data-artisans.net/v2.0
+        flinkImageRepository: flink
+        flinkImageTag: 1.9.2-stream1-scala_2.12
+      parallelism: 1
+      resources:
+        jobmanager:
+          cpu: 0.5
+          memory: 1G
+        taskmanager:
+          cpu: 1
+          memory: 1G
+      flinkConfiguration: {}
+      logging:
+        log4jLoggers: {}
+status:
+  state: CANCELLED
