@@ -1,7 +1,6 @@
 resources:
   repositories:
-    # the utility script repository
-    - repository: 'vvp-pipeline-scripts'
+    - repository: 'vvp-pipeline-scripts' # the utility scripts repository
       type: 'github'
       name: 'ververica/vvp-pipeline-scripts'
       endpoint: 'vvp-pipeline-scripts-service-connection'
@@ -13,15 +12,12 @@ variables:
   # Azure Resource Manager service connection
   azureSubscription: 'vvp-pipeline-service-connection'
 
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
-
   # Azure resources
   resourceGroup: 'vvp-pipeline-demo'
-  servicePrincipal: 'http://vvp-pipeline-service-principal'
-  keyVault: 'vvp-pipeline-keyvault'
   storageAccount: 'vvppipelinestorage'
   blobContainer: 'vvp-pipeline-container'
+  servicePrincipal: 'http://vvp-pipeline-service-principal'
+  keyVault: 'vvp-pipeline-keyvault'
 
   # Kubernetes
   kubernetesCluster: 'vvp-pipeline-cluster'
@@ -75,7 +71,7 @@ stages:
   - job: SubmitCheck
 
     pool:
-      vmImage: $(vmImageName)
+      vmImage: 'ubuntu-latest'
 
     steps:
     - checkout: self
@@ -95,65 +91,36 @@ stages:
         SecretsFilter: 'servicePrincipalKey,vvpAPIToken,tenantId'
 
     - task: Bash@3
+      displayName: Setup local access
       inputs:
         filePath: 'vvp-pipeline-scripts/setup-local-vvp-access.sh'
-      env:
-        servicePrincipal: $(servicePrincipal)
-        servicePrincipalKey: $(servicePrincipalKey)
-        tenantId: $(tenantId)
-        resourceGroup: $(resourceGroup)
-        kubernetesCluster: $(kubernetesCluster)
-        kubernetesNamespace: $(kubernetesNamespace)
-      displayName: Setup local access
+      env: { SERVICEPRINCIPAL_KEY: $(servicePrincipalKey), TENANT_ID: $(tenantId) }
 
     - task: Bash@3
+      displayName: Search deployment
       inputs:
-        # this sets the 'deploymentId' variable
-        filePath: 'vvp-pipeline-scripts/search-deployment-id.sh'
-      env:
-        vvpNamespace: $(vvpNamespace)
-        vvpAPIToken: $(vvpAPIToken)
-        buildRepository: $(Build.Repository.Name)
-      displayName: Check deployment
+        filePath: 'vvp-pipeline-scripts/search-deployment-id.sh' # this sets 'deploymentId'
+      env: { VVP_APITOKEN: $(vvpAPIToken) }
 
     - task: Bash@3
+      displayName: PATCH deployment
       inputs:
         filePath: 'vvp-pipeline-scripts/update-existing-deployment.sh'
-      env:
-        deploymentId: $(deploymentId)
-        vvpNamespace: $(vvpNamespace)
-        vvpAPIToken: $(vvpAPIToken)
-        jarFileName: $(jarFileName)
-        blobContainer: $(blobContainer)
-        storageAccount: $(storageAccount)
-        buildVersion: $(Build.SourceVersion)
-        buildRepository: $(Build.Repository.Name)
-        vvpDeploymentConfFile: $(vvpDeploymentConfFile)
+      env: { VVP_APITOKEN: $(vvpAPIToken) }
       condition: and(succeeded(), ne(variables['deploymentId'], '') )
-      displayName: PATCH deployment
 
     - task: Bash@3
+      displayName: POST deployment
       inputs:
         filePath: 'vvp-pipeline-scripts/create-new-deployment.sh'
-      env:
-        vvpNamespace: $(vvpNamespace)
-        vvpAPIToken: $(vvpAPIToken)
-        jarFileName: $(jarFileName)
-        blobContainer: $(blobContainer)
-        storageAccount: $(storageAccount)
-        buildVersion: $(Build.SourceVersion)
-        buildRepository: $(Build.Repository.Name)
-        vvpDeploymentConfFile: $(vvpDeploymentConfFile)
+      env: { VVP_APITOKEN: $(vvpAPIToken) }
       condition: and(succeeded(), eq(variables['deploymentId'], '') )
-      displayName: POST deployment
 
     - bash: sleep 90
       displayName: Wait
 
     - task: Bash@3
+      displayName: Check state
       inputs:
         filePath: 'vvp-pipeline-scripts/check-deployment-state.sh'
-      env:
-        vvpAPIToken: $(vvpAPIToken)
-        buildRepository: $(Build.Repository.Name)
-      displayName: Check state
+      env: { VVP_APITOKEN: $(vvpAPIToken) }

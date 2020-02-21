@@ -2,7 +2,7 @@ kind: Deployment
 apiVersion: v1
 metadata:
   name: ${artifactId}-deployment
-  namespace: ${vvpNamespace}
+  namespace: ${VVPNAMESPACE}
 spec:
   state: RUNNING
   upgradeStrategy:
@@ -18,7 +18,7 @@ spec:
       artifact:
         kind: JAR
         jarUri: >-
-          wasbs://${blobContainer}@${storageAccount}.blob.core.windows.net/artifacts/namespaces/${vvpNamespace}/${jarFileName}?commit=${commitHash}
+          wasbs://${BLOBCONTAINER}@${STORAGEACCOUNT}.blob.core.windows.net/artifacts/namespaces/${VVPNAMESPACE}/${jarFileName}?commit=${commitHash}
         flinkVersion: 1.9
         flinkImageRegistry: registry.platform.data-artisans.net/v2.0
         flinkImageRepository: flink
@@ -34,5 +34,3 @@ spec:
       flinkConfiguration: {}
       logging:
         log4jLoggers: {}
-status:
-  state: CANCELLED
