@@ -3,7 +3,7 @@ resources:
     # the utility script repository
     - repository: 'vvp-pipeline-scripts'
       type: 'github'
-      name: 'qinjunjerry/vvp-pipeline-scripts'
+      name: 'ververica/vvp-pipeline-scripts'
       endpoint: 'vvp-pipeline-scripts-service-connection'
 
 trigger:
