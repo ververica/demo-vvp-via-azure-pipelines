@@ -1,8 +1,5 @@
 kind: Deployment
 apiVersion: v1
-metadata:
-  name: ${artifactId}-deployment
-  namespace: ${VVPNAMESPACE}
 spec:
   state: RUNNING
   upgradeStrategy:
@@ -10,15 +7,12 @@ spec:
   restoreStrategy:
     kind: LATEST_STATE
     allowNonRestoredState: false
-  deploymentTargetId: 6232cc84-7aa3-4524-b3a8-36cab7203c47
+  deploymentTargetId: DEPLOYMENTTARGETID
   template:
-    metadata:
-      annotations: {}
     spec:
       artifact:
         kind: JAR
-        jarUri: >-
-          wasbs://${BLOBCONTAINER}@${STORAGEACCOUNT}.blob.core.windows.net/artifacts/namespaces/${VVPNAMESPACE}/${jarFileName}?commit=${commitHash}
+        jarUri: JARURI
         flinkVersion: 1.9
         flinkImageRegistry: registry.platform.data-artisans.net/v2.0
         flinkImageRepository: flink
